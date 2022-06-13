@@ -34,7 +34,17 @@ namespace LocationVoitureApi.Models
             if (!optionsBuilder.IsConfigured)
             {
                 //String connection = _configuration.GetSection("Connection:string").Value;
-                String connection = Environment.GetEnvironmentVariable("DATABASE_URL");
+                var connectionUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+                connectionUrl = connectionUrl.Replace("postgres://", string.Empty);
+                var userPassSide = connectionUrl.Split("@")[0];
+                var hostSide = connectionUrl.Split("@")[1];
+
+                var user = userPassSide.Split(":")[0];
+                var password = userPassSide.Split(":")[1];
+                var host = hostSide.Split("/")[0];
+                var database = hostSide.Split("/")[1].Split("?")[0];
+
+                String connection = $"Host={host};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
                 //warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
                 //optionsBuilder.UseSqlServer(@"database=projet;server=LENOVO242\SQL2K14;User ID=sa;pwd=pass");
                 optionsBuilder.UseNpgsql(
