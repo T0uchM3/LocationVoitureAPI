@@ -7,6 +7,9 @@ namespace LocationVoitureApi.Models
 {
     public partial class projetContext : DbContext
     {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+
+
         IConfiguration _configuration;
 
         public projetContext(IConfiguration configuration)
@@ -31,9 +34,16 @@ namespace LocationVoitureApi.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (!optionsBuilder.IsConfigured)
+            String? environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            String connection = "";
+            //working local
+            if (environment == Environments.Development)
             {
-                //String connection = _configuration.GetSection("Connection:string").Value;
+                connection = _configuration["string"];
+            }
+            else
+            {
+                //DataBASE_URL is an envirement variable retrieved from heroku
                 var connectionUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
                 connectionUrl = connectionUrl.Replace("postgres://", string.Empty);
                 var userPassSide = connectionUrl.Split("@")[0];
@@ -44,12 +54,14 @@ namespace LocationVoitureApi.Models
                 var host = hostSide.Split("/")[0];
                 var database = hostSide.Split("/")[1].Split("?")[0];
 
-                String connection = $"Host={host};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
-                //warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                //optionsBuilder.UseSqlServer(@"database=projet;server=LENOVO242\SQL2K14;User ID=sa;pwd=pass");
-                optionsBuilder.UseNpgsql(
-                    connection);
+
+                connection = $"Host={host};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+
+
+
             }
+            optionsBuilder.UseNpgsql(connection);
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
